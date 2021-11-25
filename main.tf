@@ -49,7 +49,7 @@ resource "aws_subnet" "rds-priv-subnet2" {
   vpc_id            = aws_vpc.rds-vpc.id
   availability_zone = var.azs[2]
   #availability_zone = {var.azs[1], var.azs[2]}
-  cidr_block        = var.subnetCidrs[2]
+  cidr_block = var.subnetCidrs[2]
 
   tags = {
     Name = "${var.envName}_rds-priv-subnet2"
@@ -116,20 +116,27 @@ resource "aws_security_group_rule" "rds-sg-eg-all" {
   security_group_id = aws_security_group.rds-sg.id
 }
 
+resource "aws_db_subnet_group" "rds-db-sng" {
+  name       = "rds database subnet group"
+  subnet_ids = [aws_subnet.rds-priv-subnet1.id, aws_subnet.rds-priv-subnet2.id]
+}
+
 resource "aws_db_instance" "rds_instance" {
-  allocated_storage      = 10
-  engine                 = "oracle"
-  engine_version         = "12.2"
-  instance_class         = "db.t2.micro"
-  name                   = "mydb"
+  allocated_storage      = 20
+  engine                 = "oracle-se2"
+  engine_version         = "19.0.0.0.ru-2021-07.rur-2021-07.r1"
+  instance_class         = "db.m5.xlarge"
+  license_model          = "byol"
+  name                   = "rdsdb"
   username               = "oracle"
   password               = "oracle123"
-  parameter_group_name   = "oracle-ee-12.2"
-  skip_final_snapshot    = true
-  #vpc_security_group_ids = [aws_security_group.rds-sg.id]
-  #db_subnet_group_name   = aws_subnet.rds-pub-subnet.id
+  parameter_group_name   = "default.oracle-se2-19"
+  option_group_name      = "default:oracle-se2-19"
+  vpc_security_group_ids = [aws_security_group.rds-sg.id]
+  db_subnet_group_name   = aws_db_subnet_group.rds-db-sng.id
+  #skip_final_snapshot    = true
+  #multi_az=
   #db_subnet_group_name   = aws_subnet.rds-priv-subnet2.id
   #availability_zone=
-  #option_group_name=
-  #multi_az=
+  #storage_type = gp2
 }
